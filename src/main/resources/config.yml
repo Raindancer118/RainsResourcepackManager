@@ -1,0 +1,55 @@
+# Rain's Resourcepack Manager
+#
+# Everything here can be changed in game with /rrp set <key> <value>, which writes the
+# file back — no hand editing needed for the common cases.
+
+catalog:
+  # The pack catalogue RRP reads. https://mc-packs.raindancer118.de/ publishes this file
+  # from the MC-Resourcepacks repo (tools/gen_index.py).
+  url: "https://mc-packs.raindancer118.de/index.json"
+  # How often the catalogue is refreshed in the background. 0 disables auto refresh.
+  refresh-minutes: 180
+
+apply:
+  # Send the installed packs to players when they join.
+  on-join: true
+  # auto     — combine into one pack when that is possible, otherwise send them stacked
+  # merged   — always combine (falls back to stacked with a warning when it cannot)
+  # stacked  — always send the packs one after another (vanilla supports this since 1.20.3)
+  mode: auto
+  # Default for newly installed packs: does the client have to accept it?
+  required-by-default: false
+  # Shown in the client's pack prompt. MiniMessage.
+  prompt: "<#7FD8FF>This server uses custom resource packs.</#7FD8FF> <gray>Accepting them is recommended.</gray>"
+
+merge:
+  # Where the combined pack is written. Relative to the plugin folder.
+  folder: "merged"
+  # Description of the combined pack, shown in the client's pack list. MiniMessage is not
+  # supported by the client here — plain text with § colours only.
+  description: "Combined resource pack"
+
+http:
+  # The combined pack only exists on this server, so clients need somewhere to download it.
+  # Turn this on and point public-url at a reachable address, or keep mode: stacked.
+  enabled: false
+  bind: "0.0.0.0"
+  port: 8124
+  # The address clients can actually reach, including the port. Leave empty to have RRP
+  # build it from the server IP, which only works if that address is public.
+  public-url: ""
+
+datapacks:
+  # Install the pack's datapack into the main world's datapacks folder as well. Most packs
+  # only work correctly with both halves.
+  auto-install: true
+  # Reload data packs right after installing one instead of waiting for a restart.
+  reload-after-install: true
+
+security:
+  require-https: true
+  # Empty means "any host". Add hosts to restrict where packs may be downloaded from.
+  allowed-hosts: []
+  max-download-mb: 200
+  connect-timeout-seconds: 15
+  read-timeout-seconds: 120

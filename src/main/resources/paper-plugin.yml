@@ -1,0 +1,17 @@
+name: RRP
+version: '${version}'
+main: de.raindancer.rrp.RrpPlugin
+api-version: '${apiVersion}'
+description: Rain's Resourcepack Manager — install, remove, require and combine resource packs, install their datapacks, and hand out the items they add.
+author: Raindancer118
+website: https://github.com/Raindancer118
+# Folia is deliberately NOT declared: RRP touches world datapack folders and a shared HTTP
+# server, and no region-scheduled audit has been done. Claiming support would be a guess.
+folia-supported: false
+permissions:
+  rrp.admin:
+    description: Full access to RRP — installing, removing and applying resource packs.
+    default: op
+  rrp.give:
+    description: Use /rrp give to hand out the items the installed packs add.
+    default: op

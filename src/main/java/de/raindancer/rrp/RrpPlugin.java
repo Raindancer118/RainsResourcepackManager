@@ -93,6 +93,9 @@ public final class RrpPlugin extends JavaPlugin implements Listener {
         menus.register();
         getServer().getPluginManager().registerEvents(new ChatPromptListener(menus), this);
         getServer().getPluginManager().registerEvents(this, this);
+        // What clients do with the packs: a failed download otherwise looks exactly like success.
+        getServer().getPluginManager().registerEvents(
+                new de.raindancer.rrp.pack.PackStatusListener(service, getSLF4JLogger()), this);
 
         RrpCommand command = new RrpCommand(this, service, menus);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->

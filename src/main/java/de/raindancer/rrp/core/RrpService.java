@@ -25,6 +25,7 @@ import de.raindancer.rrp.pack.PackHttpServer;
 import de.raindancer.rrp.pack.PackMerger;
 import de.raindancer.rrp.pack.PackStore;
 import de.raindancer.rrp.util.Downloader;
+import de.raindancer.rrp.util.Hashes;
 import de.raindancer.rrp.util.Msg;
 import de.raindancer.rrp.util.SafeFileName;
 import net.kyori.adventure.text.Component;
@@ -658,6 +659,22 @@ public final class RrpService {
 
     public ApplyService.Result applyToAll() {
         return apply.applyAll(plugin.getServer().getOnlinePlayers());
+    }
+
+    /**
+     * Resolves the pack UUID a client reports back to the name of the pack it belongs to.
+     *
+     * <p>The id is derived from {@code id + sha1}, so this also recognises the combined pack.
+     */
+    public java.util.Optional<String> nameOfPack(java.util.UUID id) {
+        for (InstalledPack pack : store.all()) {
+            if (Hashes.packId(pack.id(), pack.sha1()).equals(id)) {
+                return Optional.of(pack.name());
+            }
+        }
+        return merged()
+                .filter(pack -> Hashes.packId("combined", pack.sha1()).equals(id))
+                .map(pack -> "the combined pack (" + String.join(" + ", pack.packIds()) + ")");
     }
 
     // --- items -----------------------------------------------------------------------------

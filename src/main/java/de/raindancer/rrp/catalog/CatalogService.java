@@ -113,7 +113,8 @@ public final class CatalogService {
                 log.warn("Skipping a malformed pack entry in the catalogue: {}", e.getMessage());
             }
         }
-        return new Catalog(format, generated, List.copyOf(packs), fromCache);
+        return new Catalog(format, generated, string(root, "combine_endpoint", ""),
+                List.copyOf(packs), fromCache);
     }
 
     private CatalogPack parsePack(JsonObject object) {

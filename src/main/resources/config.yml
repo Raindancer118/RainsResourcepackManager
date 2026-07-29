@@ -29,9 +29,19 @@ merge:
   # supported by the client here — plain text with § colours only.
   description: "Combined resource pack"
 
+combine:
+  # Who builds the combined pack.
+  #   remote — the pack host does it and serves the result over its own HTTPS
+  #            (no merging, no upload and no open port on this server)
+  #   local  — merge here and serve it through http.* below
+  mode: remote
+  # Endpoint for remote combining. Empty means "whatever the catalogue advertises"
+  # (index.json → combine_endpoint), which is the normal case.
+  endpoint: ""
+
 http:
-  # The combined pack only exists on this server, so clients need somewhere to download it.
-  # Turn this on and point public-url at a reachable address, or keep mode: stacked.
+  # Only used when combine.mode is 'local'. The combined pack then only exists on this
+  # server, so clients need somewhere to download it from.
   enabled: false
   bind: "0.0.0.0"
   port: 8124

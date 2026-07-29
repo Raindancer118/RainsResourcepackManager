@@ -12,13 +12,14 @@ import java.util.Optional;
  * the single source of truth for download URLs, hashes and the items a pack adds. RRP hardcodes
  * nothing about any individual pack.
  */
-public record Catalog(int format, Instant generated, List<CatalogPack> packs, boolean fromCache) {
+public record Catalog(int format, Instant generated, String combineEndpoint,
+                      List<CatalogPack> packs, boolean fromCache) {
 
     /** The format RRP understands. A newer index is used anyway, with a warning. */
     public static final int SUPPORTED_FORMAT = 1;
 
     public static Catalog empty() {
-        return new Catalog(SUPPORTED_FORMAT, Instant.EPOCH, List.of(), false);
+        return new Catalog(SUPPORTED_FORMAT, Instant.EPOCH, "", List.of(), false);
     }
 
     public Optional<CatalogPack> find(String id) {

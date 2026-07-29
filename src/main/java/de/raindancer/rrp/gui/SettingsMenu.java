@@ -80,8 +80,30 @@ public final class SettingsMenu extends RrpMenu {
                     refresh();
                 });
 
-        set(28, toggle(config.httpEnabled(), Material.REDSTONE_TORCH, "Built-in HTTP server")
-                .lore("Serves the combined pack on port <port>.", Msg.num("port", config.httpPort()))
+        set(28, Icon.of(config.combineMode() == RrpConfig.CombineMode.REMOTE
+                        ? Material.ENDER_CHEST : Material.CRAFTING_TABLE)
+                .title("<" + Msg.ACCENT + ">Combined by: <who>",
+                        Msg.arg("who", config.combineMode() == RrpConfig.CombineMode.REMOTE
+                                ? "the pack host" : "this server"))
+                .lore("remote — the host merges and serves it over its own HTTPS")
+                .lore("local — merge here and serve it via the built-in HTTP server")
+                .blank()
+                .action("Click to switch")
+                .build(), (player, click) -> {
+                    RrpConfig.CombineMode next =
+                            config.combineMode() == RrpConfig.CombineMode.REMOTE
+                                    ? RrpConfig.CombineMode.LOCAL : RrpConfig.CombineMode.REMOTE;
+                    service.plugin().setConfigValue("combine.mode",
+                            next.name().toLowerCase(Locale.ROOT));
+                    service.rebuildMerge((success, message) -> {
+                        player.sendMessage(message);
+                        refresh();
+                    });
+                });
+
+        set(37, toggle(config.httpEnabled(), Material.REDSTONE_TORCH, "Built-in HTTP server")
+                .lore("Only needed with local combining. Port <port>.",
+                        Msg.num("port", config.httpPort()))
                 .lore(service.httpServer().isPresent() ? "running" : "not running")
                 .build(), (player, click) -> {
                     service.plugin().setConfigValue("http.enabled", !config.httpEnabled());

@@ -98,7 +98,9 @@ public final class MainMenu extends RrpMenu {
         return service.merged()
                 .map(merged -> merged.url().isBlank()
                         ? "built, but no public URL is set"
-                        : merged.packIds().size() + " packs, sha1 " + merged.sha1().substring(0, 12))
+                        : merged.packIds().size() + " packs · " + (merged.remote()
+                                ? "built by the pack host" : "built here")
+                                + " · sha1 " + merged.sha1().substring(0, 12))
                 .orElse("not in use — packs are sent stacked");
     }
 

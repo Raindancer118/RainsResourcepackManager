@@ -460,7 +460,8 @@ public final class RrpCommand implements BasicCommand {
         }
         sender.sendMessage(Msg.success("<key> = <value>",
                 Msg.arg("key", key), Msg.arg("value", String.valueOf(parsed))));
-        if (key.startsWith("http.") || key.startsWith("apply.") || key.startsWith("merge.")) {
+        if (key.startsWith("http.") || key.startsWith("apply.") || key.startsWith("merge.")
+                || key.startsWith("combine.")) {
             service.rebuildMerge((success, message) -> sender.sendMessage(message));
         }
     }
@@ -485,7 +486,7 @@ public final class RrpCommand implements BasicCommand {
                 "required <pack> <true|false>",
                 "move <pack> <up|down> — later packs win on conflicts",
                 "mode <auto|merged|stacked> — how packs reach the client",
-                "merge — rebuild the combined pack now",
+                "merge — rebuild the combined pack now (the pack host builds it)",
                 "apply [player|all] — send the packs again",
                 "datapack <install|remove> <pack>",
                 "give <item> [player|all] [amount]",
@@ -499,7 +500,8 @@ public final class RrpCommand implements BasicCommand {
 
     private static final List<String> SETTABLE = List.of(
             "catalog.url", "catalog.refresh-minutes", "apply.on-join", "apply.mode",
-            "apply.required-by-default", "apply.prompt", "merge.description", "http.enabled",
+            "apply.required-by-default", "apply.prompt", "merge.description",
+            "combine.mode", "combine.endpoint", "http.enabled",
             "http.bind", "http.port", "http.public-url", "datapacks.auto-install",
             "datapacks.reload-after-install", "security.require-https", "security.max-download-mb");
 
@@ -559,6 +561,7 @@ public final class RrpCommand implements BasicCommand {
     private List<String> suggestValueFor(String key) {
         return switch (key.toLowerCase(Locale.ROOT)) {
             case "apply.mode" -> List.of("auto", "merged", "stacked");
+            case "combine.mode" -> List.of("remote", "local");
             case "apply.on-join", "apply.required-by-default", "datapacks.auto-install",
                  "datapacks.reload-after-install", "http.enabled", "security.require-https" ->
                     List.of("true", "false");

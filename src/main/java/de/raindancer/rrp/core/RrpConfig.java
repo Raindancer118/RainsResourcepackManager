@@ -20,6 +20,8 @@ public record RrpConfig(
         String prompt,
         String mergeFolder,
         String mergeDescription,
+        CombineMode combineMode,
+        String combineEndpoint,
         boolean httpEnabled,
         String httpBind,
         int httpPort,
@@ -31,6 +33,25 @@ public record RrpConfig(
         long maxDownloadBytes,
         int connectTimeoutSeconds,
         int readTimeoutSeconds) {
+
+    /** Who builds the combined pack. */
+    public enum CombineMode {
+        /** The pack host builds and serves it. */
+        REMOTE,
+        /** This server merges it and serves it through the built-in HTTP server. */
+        LOCAL;
+
+        public static CombineMode parse(String raw, CombineMode fallback) {
+            if (raw == null) {
+                return fallback;
+            }
+            try {
+                return valueOf(raw.trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                return fallback;
+            }
+        }
+    }
 
     /** How the installed packs reach the client. */
     public enum ApplyMode {
@@ -63,6 +84,8 @@ public record RrpConfig(
                 config.getString("apply.prompt", ""),
                 config.getString("merge.folder", "merged"),
                 config.getString("merge.description", "Combined resource pack"),
+                CombineMode.parse(config.getString("combine.mode", "remote"), CombineMode.REMOTE),
+                config.getString("combine.endpoint", ""),
                 config.getBoolean("http.enabled", false),
                 config.getString("http.bind", "0.0.0.0"),
                 config.getInt("http.port", 8124),
@@ -86,7 +109,11 @@ public record RrpConfig(
 
     /** @return the public base URL for RRP's own HTTP server, without a trailing slash */
     public String publicBaseUrl() {
-        String url = publicUrl == null ? "" : publicUrl.trim();
+        return trimSlashes(publicUrl);
+    }
+
+    private static String trimSlashes(String raw) {
+        String url = raw == null ? "" : raw.trim();
         while (url.endsWith("/")) {
             url = url.substring(0, url.length() - 1);
         }

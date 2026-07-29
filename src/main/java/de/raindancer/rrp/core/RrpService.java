@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.raindancer.rrp.RrpPlugin;
 import de.raindancer.rrp.catalog.Catalog;
 import de.raindancer.rrp.catalog.CatalogItem;
@@ -473,6 +475,102 @@ public final class RrpService {
             return;
         }
 
+        if (config.combineMode() == RrpConfig.CombineMode.REMOTE) {
+            combineRemotely(active, callback);
+            return;
+        }
+        combineLocally(active, callback);
+    }
+
+    /**
+     * Asks the pack host to build the combination.
+     *
+     * <p>The packs already live there, the result is served over the same HTTPS host as
+     * everything else, and this server neither merges, uploads nor opens a port. Only packs that
+     * came from the catalogue can be combined this way — the host cannot merge a zip it has
+     * never seen — so anything installed from a bare URL falls back to a local merge.
+     */
+    private void combineRemotely(List<InstalledPack> active, Callback callback) {
+        String endpoint = combineEndpoint();
+        if (endpoint.isBlank()) {
+            log.info("No combine endpoint (neither in the catalogue nor in config.yml) — "
+                    + "merging locally instead.");
+            combineLocally(active, callback);
+            return;
+        }
+        List<String> foreign = active.stream()
+                .filter(pack -> !pack.source().equals("catalog"))
+                .map(InstalledPack::id)
+                .toList();
+        if (!foreign.isEmpty()) {
+            log.info("Pack(s) {} did not come from the catalogue, so the host cannot combine "
+                    + "them — merging locally instead.", String.join(", ", foreign));
+            combineLocally(active, callback);
+            return;
+        }
+
+        List<String> ids = active.stream().map(InstalledPack::id).toList();
+        String description = plugin.config().mergeDescription();
+        String url = endpoint + "?packs=" + urlEncode(String.join(",", ids))
+                + "&description=" + urlEncode(description);
+
+        plugin.runAsync(() -> {
+            try {
+                Downloader downloader = plugin.downloader();
+                String body = downloader.getString(downloader.validate(url));
+                JsonObject json = JsonParser.parseString(body).getAsJsonObject();
+                if (json.has("error")) {
+                    throw new Downloader.DownloadException(json.get("error").getAsString());
+                }
+                String packUrl = json.get("url").getAsString();
+                String sha1 = json.get("sha1").getAsString();
+                long size = json.has("size") ? json.get("size").getAsLong() : -1L;
+                List<String> conflicts = new ArrayList<>();
+                if (json.has("conflicts")) {
+                    json.getAsJsonArray("conflicts")
+                            .forEach(element -> conflicts.add(element.getAsString()));
+                }
+                // The URL comes from the host, but it still has to satisfy this server's own
+                // download policy before any client is pointed at it.
+                downloader.validate(packUrl);
+
+                plugin.runOnMain(() -> {
+                    merged = Optional.of(MergedPack.remote(sha1, size, packUrl, ids, conflicts));
+                    discardCombined();
+                    callback.done(true, Msg.success(
+                            "The pack host combined <count> packs into one (<size>, sha1 <sha1>).",
+                            Msg.num("count", ids.size()),
+                            Msg.arg("size", Msg.bytes(size)),
+                            Msg.arg("sha1", sha1.substring(0, Math.min(12, sha1.length())))));
+                });
+            } catch (Downloader.DownloadException | RuntimeException e) {
+                String detail = e.getMessage();
+                plugin.runOnMain(() -> {
+                    callback.done(false, Msg.warn("The pack host could not combine them "
+                            + "(<detail>) — trying locally.", Msg.arg("detail", detail)));
+                    combineLocally(active, callback);
+                });
+            }
+        });
+    }
+
+    /** @return the configured endpoint, or the one the catalogue advertises */
+    private String combineEndpoint() {
+        String configured = plugin.config().combineEndpoint();
+        if (configured != null && !configured.isBlank()) {
+            return configured.trim();
+        }
+        String advertised = catalog().combineEndpoint();
+        return advertised == null ? "" : advertised.trim();
+    }
+
+    private static String urlEncode(String raw) {
+        return java.net.URLEncoder.encode(raw, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    /** Merges on this server. The fallback, and what {@code combine.mode: local} selects. */
+    private void combineLocally(List<InstalledPack> active, Callback callback) {
+        RrpConfig config = plugin.config();
         List<Path> sources = new ArrayList<>();
         List<String> ids = new ArrayList<>();
         for (InstalledPack pack : active) {
@@ -500,16 +598,16 @@ public final class RrpService {
                 PackMerger.Result result = merger.merge(sources, folder, description);
                 String url = mergedUrl(result.file().getFileName().toString());
                 plugin.runOnMain(() -> {
-                    merged = Optional.of(new MergedPack(result.file(), result.sha1(), result.size(),
-                            url, List.copyOf(ids), result.conflicts()));
+                    merged = Optional.of(MergedPack.local(result.file(), result.sha1(),
+                            result.size(), url, List.copyOf(ids), result.conflicts()));
                     if (url.isBlank()) {
-                        callback.done(false, Msg.warn("Combined <count> packs, but no public URL "
-                                + "is configured — set http.public-url (and enable http) or the "
-                                + "packs will keep going out stacked.",
+                        callback.done(false, Msg.warn("Combined <count> packs here, but no public "
+                                + "URL is configured — set http.public-url (and enable http), or "
+                                + "use combine.mode remote, or they keep going out stacked.",
                                 Msg.num("count", sources.size())));
                     } else {
                         callback.done(true, Msg.success(
-                                "Combined <count> packs into one (<size>, sha1 <sha1>).",
+                                "Combined <count> packs into one here (<size>, sha1 <sha1>).",
                                 Msg.num("count", sources.size()),
                                 Msg.arg("size", Msg.bytes(result.size())),
                                 Msg.arg("sha1", result.sha1().substring(0, 12))));

@@ -20,6 +20,7 @@ class CatalogServiceTest {
               "format": 1,
               "generated": "2026-07-29T12:02:39Z",
               "base_url": "https://example.com/",
+              "combine_endpoint": "https://example.com/combine",
               "packs": [
                 {
                   "id": "yeukpack",
@@ -61,6 +62,11 @@ class CatalogServiceTest {
         assertThat(pack.resourcepack().get().sha1()).isEqualTo("abc");
         assertThat(pack.datapack()).isPresent();
         assertThat(catalog.allItems()).hasSize(2);
+    }
+
+    @Test
+    void readsTheCombineEndpointTheHostAdvertises(@TempDir Path dir) throws Exception {
+        assertThat(load(dir).catalog().combineEndpoint()).isEqualTo("https://example.com/combine");
     }
 
     @Test

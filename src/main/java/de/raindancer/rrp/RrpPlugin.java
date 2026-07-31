@@ -111,6 +111,9 @@ public final class RrpPlugin extends JavaPlugin implements Listener {
         scheduleCatalogRefresh();
 
         // Build the combined pack from what is already installed, then report the real state.
+        // The counts are known now. Reported here rather than from the self-check below, which
+        // finishes after the host has drawn its banner — facts that arrive late are facts nobody sees.
+        reportPackFacts();
         service.rebuildMerge((success, message) -> runStartupSelfCheck());
     }
 
@@ -182,7 +185,34 @@ public final class RrpPlugin extends JavaPlugin implements Listener {
      * readable, every installed pack must still have its local copy, and the combined pack —
      * if one is configured — must exist and be reachable.
      */
+    /**
+     * Set the first time the self-check runs, so it runs once.
+     * <p>
+     * It hangs off the completion of an asynchronous merge, and on a server with two active packs that
+     * completion arrived twice — so the console said everything twice. Rather than chase which of the
+     * merge paths double-fires, the check states plainly that it is a once-per-enable thing, which is
+     * what it always was.
+     */
+    private final java.util.concurrent.atomic.AtomicBoolean selfCheckDone =
+            new java.util.concurrent.atomic.AtomicBoolean();
+
+    /**
+     * What this module contributes to the host's startup banner.
+     * <p>
+     * Read straight from the store, synchronously, because the host prints its banner at the end of its
+     * own enable — anything reported from an asynchronous callback lands after the banner has gone by
+     * and is never seen. The deeper self-check below still runs later; it logs, it does not report.
+     */
+    private void reportPackFacts() {
+        int installed = service.store().all().size();
+        int active = service.store().active().size();
+        reportFact("packs", installed + " installed, " + active + " active");
+    }
+
     private void runStartupSelfCheck() {
+        if (!selfCheckDone.compareAndSet(false, true)) {
+            return;
+        }
         int installed = service.store().all().size();
         int active = service.store().active().size();
         int missing = 0;

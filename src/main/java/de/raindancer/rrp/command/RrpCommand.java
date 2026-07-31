@@ -211,8 +211,15 @@ public final class RrpCommand implements BasicCommand {
                 String colour;
                 try {
                     service.give().build(item, 1);
-                    state = "ready";
-                    colour = Msg.OK;
+                    if (item.pluginPresent()) {
+                        state = "ready";
+                        colour = Msg.OK;
+                    } else {
+                        // It builds, and it is inert: the texture is in the pack but the behaviour is
+                        // in a plugin this server does not have. "ready" would be the wrong word.
+                        state = "inert — needs the " + item.requiresPlugin() + " plugin";
+                        colour = Msg.WARN;
+                    }
                 } catch (GiveService.GiveException e) {
                     state = "unavailable — " + e.getMessage();
                     colour = Msg.WARN;

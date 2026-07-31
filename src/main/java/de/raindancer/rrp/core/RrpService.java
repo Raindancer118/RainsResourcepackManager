@@ -701,6 +701,12 @@ public final class RrpService {
                     && !installed.get().datapackInstalled()) {
                 warnings.add("the datapack of '" + item.pack() + "' is not installed");
             }
+            if (!item.pluginPresent()) {
+                // The item is fine; what it does is not here. Said plainly, because an item that looks
+                // right and does nothing is the hardest kind to diagnose from the receiving end.
+                warnings.add("it does nothing without the " + item.requiresPlugin()
+                        + " plugin, which is not installed");
+            }
             callback.done(true, Msg.success("Gave <amount>× <item> to <player><warning>.",
                     Msg.num("amount", stack.getAmount()),
                     Msg.arg("item", item.name()),

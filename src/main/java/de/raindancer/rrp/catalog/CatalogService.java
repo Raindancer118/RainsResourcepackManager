@@ -137,7 +137,8 @@ public final class CatalogService {
                         string(item, "name", item.get("id").getAsString()),
                         item.get("item").getAsString(),
                         CatalogItem.Needs.parse(string(item, "needs", "both")),
-                        string(item, "source", id)));
+                        string(item, "source", id),
+                        string(item, "requires_plugin", "")));
             }
         }
         return new CatalogPack(

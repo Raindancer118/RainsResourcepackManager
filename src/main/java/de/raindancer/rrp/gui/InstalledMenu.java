@@ -13,7 +13,7 @@ public final class InstalledMenu extends PagedMenu {
     private final RrpService service;
 
     public InstalledMenu(RrpService service, MenuManager menus, RrpMenu parent, int page) {
-        super(MenuManager.title("installed", "packs"), menus, parent, page);
+        super(MenuManager.title("Installed packs", ""), menus, parent, page);
         this.service = service;
     }
 
@@ -51,7 +51,7 @@ public final class InstalledMenu extends PagedMenu {
                 .lore("Re-sends the active packs to every player online.")
                 .build(), (player, click) -> {
                     var result = service.applyToAll();
-                    player.sendMessage(Msg.success("Sent <count> pack(s) (<how>).",
+                    Msg.tell(player, Msg.success("Sent <count> pack(s) (<how>).",
                             Msg.num("count", result.packsSent()),
                             Msg.arg("how", result.combined() ? "combined" : result.reason())));
                 });

@@ -78,7 +78,7 @@ public final class MenuManager implements Listener {
                               Consumer<String> onInput, Runnable onCancel) {
         player.closeInventory();
         prompts.put(player.getUniqueId(), new Prompt(onInput, onCancel, hint));
-        player.sendMessage(Msg.info("Type <" + Msg.ACCENT + "><hint></" + Msg.ACCENT
+        Msg.tell(player, Msg.info("Type <" + Msg.ACCENT + "><hint></" + Msg.ACCENT
                 + "> in chat, or <" + Msg.WARN + ">cancel</" + Msg.WARN + "> to abort.",
                 Msg.arg("hint", hint)));
     }
@@ -107,7 +107,7 @@ public final class MenuManager implements Listener {
                 return;
             }
             if (trimmed.isEmpty() || trimmed.equalsIgnoreCase("cancel")) {
-                player.sendMessage(Msg.warn("Cancelled."));
+                Msg.tell(player, Msg.warn("Cancelled."));
                 prompt.onCancel().run();
                 return;
             }
@@ -135,7 +135,7 @@ public final class MenuManager implements Listener {
         }
         if (!plugin.hasAdminPermission(player)) {
             player.closeInventory();
-            player.sendMessage(Msg.error("You are no longer allowed to use RRP."));
+            Msg.tell(player, Msg.error("You are no longer allowed to use RRP."));
             return;
         }
 
@@ -143,7 +143,7 @@ public final class MenuManager implements Listener {
             menu.click(player, event.getSlot(), event.getClick());
         } catch (RuntimeException e) {
             plugin.getSLF4JLogger().error("An RRP menu action failed", e);
-            player.sendMessage(Msg.error("That action failed: <detail>",
+            Msg.tell(player, Msg.error("That action failed: <detail>",
                     Msg.arg("detail", String.valueOf(e.getMessage()))));
         }
     }
@@ -160,9 +160,14 @@ public final class MenuManager implements Listener {
         prompts.remove(event.getPlayer().getUniqueId());
     }
 
-    /** Convenience for menus that want to show a title with a subtitle-ish suffix. */
+    /**
+     * A page name, and optionally what it is a page of.
+     * <p>
+     * No longer carries the gradient it used to: the plugin's name is put in front of every window by
+     * {@link de.raindancer.smpcore.gui.Brand}, and two gradients in one title read as two plugins.
+     */
     public static Component title(String main, String suffix) {
-        return Msg.raw("<gradient:" + Msg.ACCENT + ":" + Msg.ACCENT_DIM + "><bold>" + main
-                + "</bold></gradient><" + Msg.MUTED + "> " + suffix);
+        return Msg.raw("<white>" + main
+                + (suffix.isEmpty() ? "" : "<" + Msg.MUTED + "> " + suffix));
     }
 }

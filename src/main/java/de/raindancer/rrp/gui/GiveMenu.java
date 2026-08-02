@@ -24,7 +24,7 @@ public final class GiveMenu extends PagedMenu {
     private int amount = 1;
 
     public GiveMenu(RrpService service, MenuManager menus, RrpMenu parent, int page) {
-        super(MenuManager.title("items", "from the packs"), menus, parent, page);
+        super(MenuManager.title("Items", "from the packs"), menus, parent, page);
         this.service = service;
     }
 
@@ -75,14 +75,14 @@ public final class GiveMenu extends PagedMenu {
         });
         set(slot, icon, (player, click) -> {
             if (failure != null) {
-                player.sendMessage(Msg.error("<detail>", Msg.arg("detail", failure)));
+                Msg.tell(player, Msg.error("<detail>", Msg.arg("detail", failure)));
                 return;
             }
             if (click.isRightClick()) {
                 menus.open(player, new GivePlayerMenu(service, menus, this, item, amount, 0));
                 return;
             }
-            service.giveItem(item, player, amount, (success, message) -> player.sendMessage(message));
+            service.giveItem(item, player, amount, (success, message) -> Msg.tell(player, message));
         });
     }
 
@@ -100,7 +100,7 @@ public final class GiveMenu extends PagedMenu {
                             try {
                                 amount = Math.max(1, Math.min(64, Integer.parseInt(text.trim())));
                             } catch (NumberFormatException e) {
-                                player.sendMessage(Msg.error("'<text>' is not a number.",
+                                Msg.tell(player, Msg.error("'<text>' is not a number.",
                                         Msg.arg("text", text)));
                             }
                             menus.open(player, this);

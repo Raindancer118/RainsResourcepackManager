@@ -15,7 +15,7 @@ public final class MainMenu extends RrpMenu {
     private final MenuManager menus;
 
     public MainMenu(RrpService service, MenuManager menus) {
-        super(5, MenuManager.title("rrp", "resource packs"));
+        super(5, MenuManager.title("Resource packs", ""));
         this.service = service;
         this.menus = menus;
     }
@@ -67,7 +67,7 @@ public final class MainMenu extends RrpMenu {
                 .blank()
                 .action("Rebuild now")
                 .build(), (player, click) -> service.rebuildMerge((success, message) -> {
-                    player.sendMessage(message);
+                    Msg.tell(player, message);
                     refresh();
                 }));
 
@@ -78,7 +78,7 @@ public final class MainMenu extends RrpMenu {
                 .action("Apply now")
                 .build(), (player, click) -> {
                     var result = service.applyToAll();
-                    player.sendMessage(Msg.success("Sent <count> pack(s) to everyone online (<how>).",
+                    Msg.tell(player, Msg.success("Sent <count> pack(s) to everyone online (<how>).",
                             Msg.num("count", result.packsSent()),
                             Msg.arg("how", result.combined() ? "combined" : result.reason())));
                 });
@@ -88,7 +88,7 @@ public final class MainMenu extends RrpMenu {
                 .title("<" + Msg.ACCENT + ">Refresh catalogue")
                 .lore("Fetch the pack list from the host again.")
                 .build(), (player, click) -> service.refreshCatalog((success, message) -> {
-                    player.sendMessage(message);
+                    Msg.tell(player, message);
                     refresh();
                 }));
         drawBackOrClose(menus, size() - 1);

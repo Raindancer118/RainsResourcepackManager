@@ -22,7 +22,7 @@ public final class ConfirmMenu extends RrpMenu {
 
     public ConfirmMenu(MenuManager menus, RrpMenu parent, String question, String detail,
                        Consumer<Player> onConfirm) {
-        super(3, MenuManager.title("confirm", ""));
+        super(3, MenuManager.title("Confirm", ""));
         this.menus = menus;
         this.parent = parent;
         this.question = question;

@@ -20,7 +20,7 @@ public final class SettingsMenu extends RrpMenu {
     private final RrpMenu parent;
 
     public SettingsMenu(RrpService service, MenuManager menus, RrpMenu parent) {
-        super(5, MenuManager.title("settings", ""));
+        super(5, MenuManager.title("Pack settings", ""));
         this.service = service;
         this.menus = menus;
         this.parent = parent;
@@ -52,7 +52,7 @@ public final class SettingsMenu extends RrpMenu {
                     };
                     service.plugin().setConfigValue("apply.mode", next.name().toLowerCase(Locale.ROOT));
                     service.rebuildMerge((success, message) -> {
-                        player.sendMessage(message);
+                        Msg.tell(player, message);
                         refresh();
                     });
                 });
@@ -96,7 +96,7 @@ public final class SettingsMenu extends RrpMenu {
                     service.plugin().setConfigValue("combine.mode",
                             next.name().toLowerCase(Locale.ROOT));
                     service.rebuildMerge((success, message) -> {
-                        player.sendMessage(message);
+                        Msg.tell(player, message);
                         refresh();
                     });
                 });
@@ -109,7 +109,7 @@ public final class SettingsMenu extends RrpMenu {
                     service.plugin().setConfigValue("http.enabled", !config.httpEnabled());
                     service.plugin().restartHttpServer();
                     service.rebuildMerge((success, message) -> {
-                        player.sendMessage(message);
+                        Msg.tell(player, message);
                         refresh();
                     });
                 });
@@ -126,7 +126,7 @@ public final class SettingsMenu extends RrpMenu {
                         url -> {
                             service.plugin().setConfigValue("http.public-url", url);
                             service.rebuildMerge((success, message) -> {
-                                player.sendMessage(message);
+                                Msg.tell(player, message);
                                 menus.open(player, this);
                             });
                         },
@@ -146,10 +146,10 @@ public final class SettingsMenu extends RrpMenu {
                                 }
                                 service.plugin().setConfigValue("http.port", port);
                                 service.plugin().restartHttpServer();
-                                player.sendMessage(Msg.success("HTTP port set to <port>.",
+                                Msg.tell(player, Msg.success("HTTP port set to <port>.",
                                         Msg.num("port", port)));
                             } catch (NumberFormatException e) {
-                                player.sendMessage(Msg.error("'<text>' is not a valid port.",
+                                Msg.tell(player, Msg.error("'<text>' is not a valid port.",
                                         Msg.arg("text", text)));
                             }
                             menus.open(player, this);
@@ -165,7 +165,7 @@ public final class SettingsMenu extends RrpMenu {
                         url -> {
                             service.plugin().setConfigValue("catalog.url", url);
                             service.refreshCatalog((success, message) -> {
-                                player.sendMessage(message);
+                                Msg.tell(player, message);
                                 menus.open(player, this);
                             });
                         },
@@ -178,7 +178,7 @@ public final class SettingsMenu extends RrpMenu {
                 .lore("Re-reads the file from disk.")
                 .build(), (player, click) -> {
                     service.plugin().reloadRrpConfig();
-                    player.sendMessage(Msg.success("Configuration reloaded."));
+                    Msg.tell(player, Msg.success("Configuration reloaded."));
                     refresh();
                 });
     }

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "de.raindancer"
-version = "1.0.0"
+version = "1.1.0"
 
 // Compiled against 1.21.11 on purpose: the packs RRP manages declare pack formats for
 // 1.21.11 *and* 26.x, so the plugin has to load on both. A 26.x API (Java 25 bytecode)

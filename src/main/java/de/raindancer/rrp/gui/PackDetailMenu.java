@@ -16,7 +16,7 @@ public final class PackDetailMenu extends RrpMenu {
     private final String packId;
 
     public PackDetailMenu(RrpService service, MenuManager menus, RrpMenu parent, String packId) {
-        super(5, MenuManager.title("pack", packId));
+        super(5, MenuManager.title("Pack", packId));
         this.service = service;
         this.menus = menus;
         this.parent = parent;
@@ -77,7 +77,7 @@ public final class PackDetailMenu extends RrpMenu {
                 .lore("Applies the active packs again, right now.")
                 .build(), (player, click) -> {
                     service.applyToAll();
-                    player.sendMessage(Msg.success("Sent the active packs to everyone online."));
+                    Msg.tell(player, Msg.success("Sent the active packs to everyone online."));
                 });
 
         set(20, Icon.of(Material.SPECTRAL_ARROW)
@@ -103,7 +103,7 @@ public final class PackDetailMenu extends RrpMenu {
                         "The pack, its local copy and its datapack half are removed. "
                                 + "World data is not touched.",
                         confirmer -> service.uninstall(pack.id(), (success, message) -> {
-                            confirmer.sendMessage(message);
+                            Msg.tell(confirmer, message);
                             menus.open(confirmer, parent == null ? this : parent);
                         }))));
     }
@@ -120,7 +120,7 @@ public final class PackDetailMenu extends RrpMenu {
 
     private RrpService.Callback feedback(org.bukkit.entity.Player player) {
         return (success, message) -> {
-            player.sendMessage(message);
+            Msg.tell(player, message);
             if (player.isOnline()) {
                 refresh();
             }

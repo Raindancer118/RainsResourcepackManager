@@ -13,7 +13,7 @@ public final class CatalogMenu extends PagedMenu {
     private final RrpService service;
 
     public CatalogMenu(RrpService service, MenuManager menus, RrpMenu parent, int page) {
-        super(MenuManager.title("catalogue", "available packs"), menus, parent, page);
+        super(MenuManager.title("Catalogue", "available packs"), menus, parent, page);
         this.service = service;
     }
 
@@ -44,9 +44,9 @@ public final class CatalogMenu extends PagedMenu {
         icon.blank().action("Install");
 
         set(slot, icon.build(), (player, click) -> {
-            player.sendMessage(Msg.info("Installing <name> …", Msg.arg("name", pack.name())));
+            Msg.tell(player, Msg.info("Installing <name> …", Msg.arg("name", pack.name())));
             service.install(pack.id(), (success, message) -> {
-                player.sendMessage(message);
+                Msg.tell(player, message);
                 if (player.isOnline()) {
                     refresh();
                 }
@@ -65,7 +65,7 @@ public final class CatalogMenu extends PagedMenu {
                         "the pack URL (https://…/pack.zip)",
                         url -> menus.promptForText(player, "a short id for this pack",
                                 id -> service.installFromUrl(url, id, (success, message) -> {
-                                    player.sendMessage(message);
+                                    Msg.tell(player, message);
                                     menus.open(player, this);
                                 }),
                                 () -> menus.open(player, this)),
@@ -74,7 +74,7 @@ public final class CatalogMenu extends PagedMenu {
         set(size() - 4, Icon.of(Material.CLOCK)
                 .title("<" + Msg.ACCENT + ">Refresh catalogue")
                 .build(), (player, click) -> service.refreshCatalog((success, message) -> {
-                    player.sendMessage(message);
+                    Msg.tell(player, message);
                     if (player.isOnline()) {
                         refresh();
                     }

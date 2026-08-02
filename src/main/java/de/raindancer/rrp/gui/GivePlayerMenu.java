@@ -19,12 +19,18 @@ public final class GivePlayerMenu extends PagedMenu {
 
     public GivePlayerMenu(RrpService service, MenuManager menus, RrpMenu parent,
                           CatalogItem item, int amount, int page) {
-        super(MenuManager.title("give", item.id()), menus, parent, page);
+        super(MenuManager.title("Give", item.id()), menus, parent, page);
         this.service = service;
         this.item = item;
         this.amount = amount;
     }
 
+    /**
+     * Only online players here, deliberately — unlike the claim pickers.
+     * <p>
+     * Handing somebody an item needs an inventory to put it in, and an offline player has none.
+     * Listing names that would fail on click would be a worse chooser, not a fuller one.
+     */
     private List<? extends Player> players() {
         return List.copyOf(service.plugin().getServer().getOnlinePlayers());
     }
@@ -54,7 +60,7 @@ public final class GivePlayerMenu extends PagedMenu {
         });
         set(slot, head, (player, click) -> service.giveItem(item, target, amount,
                 (success, message) -> {
-                    player.sendMessage(message);
+                    Msg.tell(player, message);
                     if (player.isOnline()) {
                         refresh();
                     }
@@ -76,7 +82,7 @@ public final class GivePlayerMenu extends PagedMenu {
                         service.giveItem(item, target, amount, RrpService.Callback.NONE);
                         given++;
                     }
-                    player.sendMessage(Msg.success("Gave <item> to <count> player(s).",
+                    Msg.tell(player, Msg.success("Gave <item> to <count> player(s).",
                             Msg.arg("item", item.name()), Msg.num("count", given)));
                 });
     }

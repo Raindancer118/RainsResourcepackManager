@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -34,6 +35,7 @@ public final class PackHttpServer {
     private final int port;
 
     private HttpServer server;
+    private ExecutorService executor;
 
     public PackHttpServer(Path folder, String bind, int port, Logger log) {
         this.folder = folder.toAbsolutePath().normalize();
@@ -51,11 +53,12 @@ public final class PackHttpServer {
         Files.createDirectories(folder);
         server = HttpServer.create(new InetSocketAddress(bind, port), 0);
         server.createContext(PREFIX, this::handle);
-        server.setExecutor(Executors.newFixedThreadPool(2, runnable -> {
+        this.executor = Executors.newFixedThreadPool(2, runnable -> {
             Thread thread = new Thread(runnable, "rrp-http");
             thread.setDaemon(true);
             return thread;
-        }));
+        });
+        server.setExecutor(executor);
         server.start();
         log.info("Serving combined packs on http://{}:{}{}", bind, port, PREFIX);
     }
@@ -64,6 +67,12 @@ public final class PackHttpServer {
         if (server != null) {
             server.stop(0);
             server = null;
+        }
+        // The executor is ours, not the server's: stopping the HttpServer does not touch it, so without
+        // this every reload left two more threads behind for the life of the JVM.
+        if (executor != null) {
+            executor.shutdownNow();
+            executor = null;
         }
     }
 

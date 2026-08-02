@@ -55,6 +55,13 @@ public final class RrpPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        // The window-title seam's default leaves a page's title unchanged; standing alone there is
+        // no host to brand it instead, so this plugin installs the gradient tag every one of its
+        // screens has always worn.
+        de.raindancer.rrp.gui.RrpMenu.configureTitler(page -> Msg.raw(
+                "<gradient:" + Msg.ACCENT + ":" + Msg.ACCENT_DIM + "><bold>rrp</bold></gradient><"
+                        + Msg.MUTED + "> » ").append(page));
+
         saveDefaultConfig();
         this.config = RrpConfig.from(getConfig());
         this.userAgent = "RainsResourcepackManager/" + getPluginMeta().getVersion()
@@ -197,16 +204,25 @@ public final class RrpPlugin extends JavaPlugin implements Listener {
             new java.util.concurrent.atomic.AtomicBoolean();
 
     /**
-     * What this module contributes to the host's startup banner.
+     * What this plugin would contribute to the host's startup banner, inside Rain's SMP Core.
      * <p>
-     * Read straight from the store, synchronously, because the host prints its banner at the end of its
-     * own enable — anything reported from an asynchronous callback lands after the banner has gone by
-     * and is never seen. The deeper self-check below still runs later; it logs, it does not report.
+     * Read straight from the store, synchronously, so the count is known before the deeper self-check
+     * below runs — which logs, rather than reports, because standing alone there is no host banner to
+     * report to.
      */
     private void reportPackFacts() {
         int installed = service.store().all().size();
         int active = service.store().active().size();
         reportFact("packs", installed + " installed, " + active + " active");
+    }
+
+    /**
+     * Where a vendored module hands a fact up to the host's startup banner. Standing alone there is no
+     * banner to hand it to, so this logs it immediately instead — the standalone jar's only reader of
+     * its own startup facts is its own console.
+     */
+    private void reportFact(String label, String value) {
+        getSLF4JLogger().info("{}: {}", label, value);
     }
 
     private void runStartupSelfCheck() {

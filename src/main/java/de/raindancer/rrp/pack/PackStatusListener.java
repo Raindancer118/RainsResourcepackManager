@@ -39,14 +39,14 @@ public final class PackStatusListener implements Listener {
             case SUCCESSFULLY_LOADED -> log.info("{} loaded {}.", player, pack);
             case DECLINED -> {
                 log.warn("{} declined {}.", player, pack);
-                event.getPlayer().sendMessage(Msg.warn("You declined the resource pack — custom "
+                Msg.tell(event.getPlayer(), Msg.warn("You declined the resource pack — custom "
                         + "items will look like ordinary ones. <gray>/rrp</gray> is not needed; "
                         + "rejoin to be asked again."));
             }
             case FAILED_DOWNLOAD -> {
                 log.warn("{} could not download {} — check that the URL is reachable from the "
                         + "internet and that the sha1 matches the file.", player, pack);
-                event.getPlayer().sendMessage(Msg.error("The resource pack could not be "
+                Msg.tell(event.getPlayer(), Msg.error("The resource pack could not be "
                         + "downloaded. This is a server-side problem, not yours — it has been "
                         + "logged."));
             }

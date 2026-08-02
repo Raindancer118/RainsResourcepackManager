@@ -2,6 +2,7 @@ package de.raindancer.rrp.gui;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 import de.raindancer.rrp.util.Msg;
 import net.kyori.adventure.text.Component;
@@ -23,6 +24,15 @@ import org.bukkit.inventory.ItemStack;
  *
  * <p>Menus hold no {@link Player} reference beyond the open call and are discarded when closed, so
  * they cannot keep a disconnected player's data alive.
+ *
+ * <h2>The window-title seam</h2>
+ * Folded into Rain's SMP Core, every window in the jar has to wear the host's brand — the same tag
+ * and dash every other module's screens do — rather than RRP's own. Every screen passes through
+ * {@link #getInventory()} to get its inventory built, so that is the one place a title needs
+ * wrapping, and {@link #configureTitler} is the seam: a static {@link UnaryOperator}, installed
+ * once at startup, that turns a page's own title into the finished window title. The default here
+ * leaves the page alone — this class holds the seam, not a brand of its own — and it is
+ * {@code RrpPlugin} that installs the real one, on either side of the vendoring split.
  */
 public abstract class RrpMenu implements InventoryHolder {
 
@@ -30,6 +40,8 @@ public abstract class RrpMenu implements InventoryHolder {
     public interface SlotAction {
         void run(Player player, ClickType click);
     }
+
+    private static volatile UnaryOperator<Component> titler = page -> page;
 
     private final Map<Integer, SlotAction> actions = new HashMap<>();
     private final int rows;
@@ -42,6 +54,17 @@ public abstract class RrpMenu implements InventoryHolder {
     }
 
     /**
+     * Installed once, at startup, by {@code RrpPlugin}.
+     *
+     * @param title wraps a page's own title into the finished window title; null keeps it unchanged
+     */
+    public static void configureTitler(UnaryOperator<Component> title) {
+        if (title != null) {
+            titler = title;
+        }
+    }
+
+    /**
      * The backing inventory, created on first use.
      *
      * <p>Deliberately not built in the constructor: {@code createInventory} would have to be handed
@@ -51,7 +74,9 @@ public abstract class RrpMenu implements InventoryHolder {
     @Override
     public final Inventory getInventory() {
         if (inventory == null) {
-            inventory = Bukkit.createInventory(this, rows * 9, title);
+            // The installed titler, not the raw title: every window in this jar may need to wear a
+            // host's brand, and this is the one place all of them pass through.
+            inventory = Bukkit.createInventory(this, rows * 9, titler.apply(title));
         }
         return inventory;
     }

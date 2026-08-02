@@ -81,14 +81,14 @@ public final class RrpCommand implements BasicCommand {
         // Everyone with rrp.give may hand out items; everything else is admin only.
         if (sub.equals("give")) {
             if (!plugin.hasGivePermission(sender)) {
-                sender.sendMessage(RrpPlugin.noPermission());
+                Msg.tell(sender, RrpPlugin.noPermission());
                 return;
             }
             give(sender, rest);
             return;
         }
         if (!plugin.hasAdminPermission(sender)) {
-            sender.sendMessage(RrpPlugin.noPermission());
+            Msg.tell(sender, RrpPlugin.noPermission());
             return;
         }
 
@@ -111,7 +111,7 @@ public final class RrpCommand implements BasicCommand {
             case "reload" -> reload(sender);
             case "help", "?" -> help(sender);
             default -> {
-                sender.sendMessage(Msg.error("Unknown subcommand '<sub>'.", Msg.arg("sub", sub)));
+                Msg.tell(sender, Msg.error("Unknown subcommand '<sub>'.", Msg.arg("sub", sub)));
                 help(sender);
             }
         }
@@ -123,7 +123,7 @@ public final class RrpCommand implements BasicCommand {
         if (sender instanceof Player player) {
             menus.open(player, new MainMenu(service, menus));
         } else {
-            sender.sendMessage(Msg.error("The GUI needs a player — try /rrp list."));
+            Msg.tell(sender, Msg.error("The GUI needs a player — try /rrp list."));
         }
     }
 
@@ -183,14 +183,14 @@ public final class RrpCommand implements BasicCommand {
 
     private void info(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(Msg.error("Usage: /rrp info <pack>"));
+            Msg.tell(sender, Msg.error("Usage: /rrp info <pack>"));
             return;
         }
         String id = args[0];
         Optional<InstalledPack> installed = service.store().get(id);
         Optional<CatalogPack> entry = service.catalog().find(id);
         if (installed.isEmpty() && entry.isEmpty()) {
-            sender.sendMessage(Msg.error("Nothing called '<id>' is installed or in the catalogue.",
+            Msg.tell(sender, Msg.error("Nothing called '<id>' is installed or in the catalogue.",
                     Msg.arg("id", id)));
             return;
         }
@@ -244,13 +244,13 @@ public final class RrpCommand implements BasicCommand {
 
     private void install(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(Msg.error("Usage: /rrp install <pack> — or /rrp install <url> <id>"));
+            Msg.tell(sender, Msg.error("Usage: /rrp install <pack> — or /rrp install <url> <id>"));
             return;
         }
         String target = args[0];
         if (target.startsWith("http://") || target.startsWith("https://")) {
             if (args.length < 2) {
-                sender.sendMessage(Msg.error("Installing from a URL needs an id: "
+                Msg.tell(sender, Msg.error("Installing from a URL needs an id: "
                         + "/rrp install <url> <id>"));
                 return;
             }
@@ -264,7 +264,7 @@ public final class RrpCommand implements BasicCommand {
 
     private void uninstall(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(Msg.error("Usage: /rrp uninstall <pack>"));
+            Msg.tell(sender, Msg.error("Usage: /rrp uninstall <pack>"));
             return;
         }
         service.uninstall(args[0], (success, message) -> sender.sendMessage(message));
@@ -272,7 +272,7 @@ public final class RrpCommand implements BasicCommand {
 
     private void setEnabled(CommandSender sender, String[] args, boolean enabled) {
         if (args.length == 0) {
-            sender.sendMessage(Msg.error("Usage: /rrp <enable|disable> <pack>"));
+            Msg.tell(sender, Msg.error("Usage: /rrp <enable|disable> <pack>"));
             return;
         }
         service.setEnabled(args[0], enabled, (success, message) -> sender.sendMessage(message));
@@ -280,7 +280,7 @@ public final class RrpCommand implements BasicCommand {
 
     private void required(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(Msg.error("Usage: /rrp required <pack> <true|false>"));
+            Msg.tell(sender, Msg.error("Usage: /rrp required <pack> <true|false>"));
             return;
         }
         service.setRequired(args[0], parseBoolean(args[1]),
@@ -289,7 +289,7 @@ public final class RrpCommand implements BasicCommand {
 
     private void move(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(Msg.error("Usage: /rrp move <pack> <up|down>"));
+            Msg.tell(sender, Msg.error("Usage: /rrp move <pack> <up|down>"));
             return;
         }
         service.move(args[0], args[1].equalsIgnoreCase("up") ? -1 : 1,
@@ -304,7 +304,7 @@ public final class RrpCommand implements BasicCommand {
         }
         RrpConfig.ApplyMode mode = RrpConfig.ApplyMode.parse(args[0], null);
         if (mode == null) {
-            sender.sendMessage(Msg.error("Unknown mode '<mode>'. Use auto, merged or stacked.",
+            Msg.tell(sender, Msg.error("Unknown mode '<mode>'. Use auto, merged or stacked.",
                     Msg.arg("mode", args[0])));
             return;
         }
@@ -332,18 +332,18 @@ public final class RrpCommand implements BasicCommand {
     private void apply(CommandSender sender, String[] args) {
         if (args.length == 0 || args[0].equalsIgnoreCase("all")) {
             ApplyService.Result result = service.applyToAll();
-            sender.sendMessage(Msg.success("Sent <count> pack(s) to everyone online (<how>).",
+            Msg.tell(sender, Msg.success("Sent <count> pack(s) to everyone online (<how>).",
                     Msg.num("count", result.packsSent()),
                     Msg.arg("how", result.combined() ? "combined" : result.reason())));
             return;
         }
         Player target = plugin.getServer().getPlayerExact(args[0]);
         if (target == null) {
-            sender.sendMessage(Msg.error("'<name>' is not online.", Msg.arg("name", args[0])));
+            Msg.tell(sender, Msg.error("'<name>' is not online.", Msg.arg("name", args[0])));
             return;
         }
         ApplyService.Result result = service.applyTo(target);
-        sender.sendMessage(Msg.success("Sent <count> pack(s) to <name> (<how>).",
+        Msg.tell(sender, Msg.success("Sent <count> pack(s) to <name> (<how>).",
                 Msg.num("count", result.packsSent()),
                 Msg.arg("name", target.getName()),
                 Msg.arg("how", result.combined() ? "combined" : result.reason())));
@@ -351,7 +351,7 @@ public final class RrpCommand implements BasicCommand {
 
     private void datapack(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(Msg.error("Usage: /rrp datapack <install|remove> <pack>"));
+            Msg.tell(sender, Msg.error("Usage: /rrp datapack <install|remove> <pack>"));
             return;
         }
         if (args[0].equalsIgnoreCase("install")) {
@@ -363,13 +363,13 @@ public final class RrpCommand implements BasicCommand {
 
     private void give(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(Msg.error("Usage: /rrp give <item> [player|all] [amount]"));
+            Msg.tell(sender, Msg.error("Usage: /rrp give <item> [player|all] [amount]"));
             listItems(sender);
             return;
         }
         Optional<CatalogItem> item = service.catalog().findItem(args[0]);
         if (item.isEmpty()) {
-            sender.sendMessage(Msg.error("No item called '<item>'.", Msg.arg("item", args[0])));
+            Msg.tell(sender, Msg.error("No item called '<item>'.", Msg.arg("item", args[0])));
             listItems(sender);
             return;
         }
@@ -379,7 +379,7 @@ public final class RrpCommand implements BasicCommand {
             try {
                 amount = Math.max(1, Math.min(64, Integer.parseInt(args[2])));
             } catch (NumberFormatException e) {
-                sender.sendMessage(Msg.error("'<text>' is not a number.", Msg.arg("text", args[2])));
+                Msg.tell(sender, Msg.error("'<text>' is not a number.", Msg.arg("text", args[2])));
                 return;
             }
         }
@@ -391,7 +391,7 @@ public final class RrpCommand implements BasicCommand {
             } else {
                 Player target = plugin.getServer().getPlayerExact(args[1]);
                 if (target == null) {
-                    sender.sendMessage(Msg.error("'<name>' is not online.", Msg.arg("name", args[1])));
+                    Msg.tell(sender, Msg.error("'<name>' is not online.", Msg.arg("name", args[1])));
                     return;
                 }
                 targets.add(target);
@@ -399,7 +399,7 @@ public final class RrpCommand implements BasicCommand {
         } else if (sender instanceof Player player) {
             targets.add(player);
         } else {
-            sender.sendMessage(Msg.error("From the console, name a player: "
+            Msg.tell(sender, Msg.error("From the console, name a player: "
                     + "/rrp give <item> <player>"));
             return;
         }
@@ -432,14 +432,14 @@ public final class RrpCommand implements BasicCommand {
 
     private void set(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(Msg.error("Usage: /rrp set <key> <value> — keys: "
+            Msg.tell(sender, Msg.error("Usage: /rrp set <key> <value> — keys: "
                     + String.join(", ", SETTABLE)));
             return;
         }
         String key = args[0].toLowerCase(Locale.ROOT);
         String value = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
         if (!SETTABLE.contains(key)) {
-            sender.sendMessage(Msg.error("Unknown key '<key>'. Known keys: <keys>",
+            Msg.tell(sender, Msg.error("Unknown key '<key>'. Known keys: <keys>",
                     Msg.arg("key", key), Msg.arg("keys", String.join(", ", SETTABLE))));
             return;
         }
@@ -457,7 +457,7 @@ public final class RrpCommand implements BasicCommand {
             default -> value;
         };
         if (parsed == null) {
-            sender.sendMessage(Msg.error("'<value>' is not valid for <key>.",
+            Msg.tell(sender, Msg.error("'<value>' is not valid for <key>.",
                     Msg.arg("value", value), Msg.arg("key", key)));
             return;
         }
@@ -465,7 +465,7 @@ public final class RrpCommand implements BasicCommand {
         if (key.startsWith("http.")) {
             plugin.restartHttpServer();
         }
-        sender.sendMessage(Msg.success("<key> = <value>",
+        Msg.tell(sender, Msg.success("<key> = <value>",
                 Msg.arg("key", key), Msg.arg("value", String.valueOf(parsed))));
         if (key.startsWith("http.") || key.startsWith("apply.") || key.startsWith("merge.")
                 || key.startsWith("combine.")) {
@@ -477,7 +477,7 @@ public final class RrpCommand implements BasicCommand {
         plugin.reloadRrpConfig();
         plugin.restartHttpServer();
         service.rebuildMerge((success, message) -> sender.sendMessage(message));
-        sender.sendMessage(Msg.success("Configuration reloaded."));
+        Msg.tell(sender, Msg.success("Configuration reloaded."));
     }
 
     private void help(CommandSender sender) {
